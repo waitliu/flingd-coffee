@@ -27,12 +27,14 @@ events                          = require "events"
 { SessionManager }              = rekuire "dial/session/SessionManager"
 { SSDPServer }                  = rekuire "dial/discovery/SSDPServer"
 { MDNSServer }                  = rekuire "dial/discovery/MDNSServer"
+{ REMOTEServer }                = rekuire "dial/discovery/REMOTEServer"
 
 class DIALServer extends events.EventEmitter
 
     constructor: (@httpServer, @networkChecker) ->
         @ssdpServer = new SSDPServer @networkChecker, @httpServer.getPort()
         @mdnsServer = new MDNSServer @networkChecker, @httpServer.getPort()
+        @remoteServer = new REMOTEServer @networkChecker, @httpServer.getPort()
 
     start: ->
         SessionManager.init()
@@ -50,5 +52,6 @@ class DIALServer extends events.EventEmitter
 
         @ssdpServer.start()
         @mdnsServer.start()
+        @remoteServer.start()
 
 module.exports.DIALServer = DIALServer
