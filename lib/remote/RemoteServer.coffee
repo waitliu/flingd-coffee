@@ -161,7 +161,9 @@ class RemoteServer extends events.EventEmitter
                     resp = {}
                     resp.body = body
                     resp.mimeType = response.headers['content-type'] ? "text/html"
+                    if resp.mimeType == "application/json"
+                        resp.body = JSON.stringify body
                     @sendData RemoteServer.CMD_PROXY, messageId, resp
-                    Log.d "response:#{response}, mimeType:#{resp.mimeType},body:#{body}"
+                    Log.d "response:#{response}, mimeType:#{resp.mimeType},body:#{JSON.stringify(body)}"
 
 module.exports.RemoteServer = RemoteServer
