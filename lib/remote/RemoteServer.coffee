@@ -158,7 +158,10 @@ class RemoteServer extends events.EventEmitter
                 if error 
                     Log.e "error!!! #{error}" 
                 else
-                    @sendData RemoteServer.CMD_PROXY, messageId, body
-                    Log.d "response:#{response}, body:#{body}"
+                    resp = {}
+                    resp.body = body
+                    resp.mimeType = response.headers['content-type'] ? "text/html"
+                    @sendData RemoteServer.CMD_PROXY, messageId, resp
+                    Log.d "response:#{response}, mimeType:#{resp.mimeType},body:#{body}"
 
 module.exports.RemoteServer = RemoteServer
