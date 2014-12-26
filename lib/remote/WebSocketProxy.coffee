@@ -25,19 +25,9 @@ class WebSocketProxy extends events.EventEmitter
     constructor: (locale,remote)->
         events.EventEmitter.call(this)
         @remoteWs = new WebSocket remote
+        
         @remoteWs.on "open", () =>
             @rstatus = true
-            @localeWs = new WebSocket locale
-            @localeWs.on "message", (data,flags) =>
-                if @rstatus
-                    @remoteWs.send data
-                Log.d "recver data: #{data}"
-            @localeWs.on "close", () =>
-                @lstatus = false
-                if @rstatus
-                    @rstatus = false
-                    @remoteWs.close()
-                Log.d "websocket colse: #{locale}"
             Log.d "websocket open: #{remote}" 
         @remoteWs.on "message", (data,flags) =>
             if @lstatus
@@ -50,6 +40,21 @@ class WebSocketProxy extends events.EventEmitter
                 @localeWs.close()
             Log.d "websocket colse: #{remote}"
         
+        @localeWs = new WebSocket locale
+        @localeWs.on "open", () =>
+            @lstatus = true
+            Log.d "websocket open: #{locale}"
+        @localeWs.on "message", (data,flags) =>
+            if @rstatus
+                @remoteWs.send data
+            Log.d "recver data: #{data}"
+        @localeWs.on "close", () =>
+            @lstatus = false
+            if @rstatus
+                @rstatus = false
+                @remoteWs.close()
+            Log.d "websocket colse: #{locale}"
+
     stop: ->
         if @lstatus
             @lstatus = false
