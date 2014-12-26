@@ -14,19 +14,22 @@
 #    limitations under the License.
 #
 
-events          = require "events"
-os              = require "os"
+events              = require "events"
+os                  = require "os"
 
-{ Log }         = rekuire "log/Log"
-{ DataPack }    = rekuire "remote/DataPack"
+{ Log }             = rekuire "log/Log"
+{ DataPack }        = rekuire "remote/DataPack"
+{ WebSocketProxy }  = rekuire "remote/WebSocketProxy"
 
 class RemoteServer extends events.EventEmitter
     @CMD_LOGIN = 1
     @CMD_REPORT = 1001
     @CMD_PROXY = 1002
+    @CMD_WS_PROXY = 1003
 
     constructor: ->
         events.EventEmitter.call(this)
+        @wsproxy = {}
         @on "ready", =>
             Log.d "remote server is ready !"
 
@@ -136,6 +139,8 @@ class RemoteServer extends events.EventEmitter
             switch message.command
                 when RemoteServer.CMD_PROXY
                     @proxy_send message.messageId, message.data
+                when RemoteServer.CMD_WS_PROXY
+                    @proxy_ws message.messageId, message.data
 
     proxy_send: (messageId, req) ->
         request = require "request"
@@ -165,5 +170,19 @@ class RemoteServer extends events.EventEmitter
                         resp.body = JSON.stringify body
                     @sendData RemoteServer.CMD_PROXY, messageId, resp
                     Log.d "response:#{response}, mimeType:#{resp.mimeType},body:#{JSON.stringify(body)}"
+
+    proxy_ws: (messageId, wsdata) ->
+        Log.d "wsdata #{JSON.stringify(wsdata)}"
+        switch wsdata.cmd
+            when "start"
+                @wsproxy[wsdata.remote] = new WebSocketProxy wsdata.local, wsdata.remote
+                @sendData RemoteServer.CMD_WS_PROXY, messageId, "start"
+                Log.d "start proxy #{wsdata.local}"
+            when "stop"
+                if @wsproxy[wsdata.remote]
+                    @wsproxy[wsdata.remote].stop()
+                    delete @wsproxy[wsdata.remote]
+                @sendData RemoteServer.CMD_WS_PROXY, messageId, "stop"
+                Log.d "stop proxy #{wsdata.local}"
 
 module.exports.RemoteServer = RemoteServer
