@@ -175,7 +175,8 @@ class RemoteServer extends events.EventEmitter
         Log.d "wsdata #{JSON.stringify(wsdata)}"
         switch wsdata.cmd
             when "start"
-                @wsproxy[wsdata.remote] = new WebSocketProxy wsdata.local, wsdata.remote
+                local_host = "ws://"+@getAddress().ipv4+":9439"
+                @wsproxy[wsdata.remote] = new WebSocketProxy local_host+wsdata.local, wsdata.remote
                 @sendData RemoteServer.CMD_WS_PROXY, messageId, "start"
                 Log.d "start proxy #{wsdata.local}"
             when "stop"

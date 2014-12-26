@@ -31,7 +31,7 @@ class WebSocketProxy extends events.EventEmitter
             @localeWs.on "message", (data,flags) =>
                 if @rstatus
                     @remoteWs.send data
-                Log.d "data: #{data}"
+                Log.d "recver data: #{data}"
             @localeWs.on "close", () =>
                 @lstatus = false
                 if @rstatus
@@ -42,7 +42,7 @@ class WebSocketProxy extends events.EventEmitter
         @remoteWs.on "message", (data,flags) =>
             if @lstatus
                 @localeWs.send data
-            Log.d "data: #{data}"
+            Log.d "sender data: #{data}"
         @remoteWs.on "close", () =>
             @rstatus = false
             if @lstatus
