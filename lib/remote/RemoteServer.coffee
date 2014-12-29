@@ -128,9 +128,10 @@ class RemoteServer extends events.EventEmitter
         @sendData RemoteServer.CMD_LOGIN, -1, message
 
     ping: ->
-        message = 
-            "id":@deviceId
-        @sendData RemoteServer.CMD_PING, -3, message
+        if @status
+            message = 
+                "id":@deviceId
+            @sendData RemoteServer.CMD_PING, -3, message
 
     report: ->
         message = 
