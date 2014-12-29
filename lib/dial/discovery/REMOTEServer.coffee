@@ -31,7 +31,7 @@ class REMOTEServer
         Log.d "RemoteDiscover : #{name}"
         options =
             serverPort : 5001
-            serverName : "10.0.0.201"
+            serverName : "gateway.remote.infthink.com"
             dialPort : @port
             deviceId : name
             deviceName : name
