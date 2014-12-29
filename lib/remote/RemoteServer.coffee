@@ -192,10 +192,12 @@ class RemoteServer extends events.EventEmitter
                 @sendData RemoteServer.CMD_WS_PROXY, messageId, "start"
                 Log.d "start proxy #{wsdata.local}"
             when "stop"
-                if @wsproxy[wsdata.remote]
-                    @wsproxy[wsdata.remote].stop()
-                    delete @wsproxy[wsdata.remote]
-                @sendData RemoteServer.CMD_WS_PROXY, messageId, "stop"
-                Log.d "stop proxy #{wsdata.local}"
+                setTimeout (=>
+                    if @wsproxy[wsdata.remote]
+                        @wsproxy[wsdata.remote].stop()
+                        delete @wsproxy[wsdata.remote]
+                    @sendData RemoteServer.CMD_WS_PROXY, messageId, "stop"
+                    Log.d "stop proxy #{wsdata.local}"
+                    ), 5000
 
 module.exports.RemoteServer = RemoteServer
