@@ -23,9 +23,11 @@ os                  = require "os"
 
 class RemoteServer extends events.EventEmitter
     @CMD_LOGIN = 1
+    @CMD_PING = 2
     @CMD_REPORT = 1001
     @CMD_PROXY = 1002
     @CMD_WS_PROXY = 1003
+    @CMD_PING = 2
 
     constructor: ->
         events.EventEmitter.call(this)
@@ -100,10 +102,14 @@ class RemoteServer extends events.EventEmitter
         @startLoop = setInterval (=>
             @_start() ), 60000
 
+        @pingLoop = setInterval (=>
+            @ping() ), 5000
+
     stop: ->
         @socket.close()
         @status = false
-        clearInterval @start_loop
+        clearInterval @startLoop
+        clearInterval @pingLoop
         Log.d "disconnect remote server"
 
     sendData: (command, messageId, data) ->
@@ -120,6 +126,11 @@ class RemoteServer extends events.EventEmitter
             "id":@deviceId
             "skey":@skey
         @sendData RemoteServer.CMD_LOGIN, -1, message
+
+    ping: ->
+        message = 
+            "id":@deviceId
+        @sendData RemoteServer.CMD_PING, -3, message
 
     report: ->
         message = 
