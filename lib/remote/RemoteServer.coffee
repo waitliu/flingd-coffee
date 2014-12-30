@@ -106,11 +106,12 @@ class RemoteServer extends events.EventEmitter
             @ping() ), 5000
 
     stop: ->
-        @socket.close()
-        @status = false
-        clearInterval @startLoop
-        clearInterval @pingLoop
-        Log.d "disconnect remote server"
+        if status
+            @socket.close()
+            @status = false
+            clearInterval @startLoop
+            clearInterval @pingLoop
+            Log.d "disconnect remote server"
 
     sendData: (command, messageId, data) ->
         try
@@ -157,14 +158,19 @@ class RemoteServer extends events.EventEmitter
     proxy_send: (messageId, req) ->
         request = require "request"
         if req.path and req.method
-            url = "http://127.0.0.1:"+ @dialPort + req.path
+            #url = "http://127.0.0.1:"+ @dialPort + req.path
+            url = "http://" + @getAddress().ipv4 + ":" + @dialPort + req.path
             req.method = req.method.toUpperCase()
             headers = req.headers
             if !headers
                 headers = {}
-            body_data = req.body
-            if !body_data
-                body_data = ""
+            if req.body
+                try
+                    body_data = JSON.parse req.body
+                catch error
+                    body_data = ""
+                    Log.e "body data: #{req.body}"
+                    Log.e "error:#{error}"
             option = 
                 url: url
                 method: req.method 
