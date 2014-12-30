@@ -32,6 +32,7 @@ class RemoteServer extends events.EventEmitter
     constructor: ->
         events.EventEmitter.call(this)
         @wsproxy = {}
+        @dataBuffer = new Buffer(0)
         @on "ready", =>
             Log.d "remote server is ready !"
 
@@ -142,18 +143,43 @@ class RemoteServer extends events.EventEmitter
         @sendData RemoteServer.CMD_REPORT, -2, message
 
     onReceive: (data) ->
-        try
-            message = DataPack.decode data
-        catch error
-            Log.d "error: #{error}"
-            Log.d "data: #{data}"
-        if message and message.command and message.command > 1
-            Log.i "remote receive message: #{JSON.stringify(message)}".red
-            switch message.command
-                when RemoteServer.CMD_PROXY
-                    @proxy_send message.messageId, message.data
-                when RemoteServer.CMD_WS_PROXY
-                    @proxy_ws message.messageId, message.data
+        @dataBuffer = Buffer.concat([@dataBuffer,data])
+        if @dataBuffer.length > 12
+            dataLen = @dataBuffer.readUInt32BE 0
+            command = @dataBuffer.readUInt32BE 4
+            messageId = @dataBuffer.readUInt32BE 8
+            if dataLen <= @dataBuffer.length
+                data = @dataBuffer.toString "utf-8", 12, dataLen
+                @dataBuffer = @dataBuffer.slice dataLen
+                Log.d "dataLen: #{dataLen}, command: #{command}, messageId: #{messageId}, data: #{data}"
+                try
+                    jsonData = JSON.parse data
+                    if command > 1
+                        switch command
+                            when RemoteServer.CMD_PROXY
+                                @proxy_send messageId, jsonData
+                            when RemoteServer.CMD_WS_PROXY
+                                @proxy_ws messageId, jsonData
+                catch error
+                    Log.d "error: #{error}"
+        if @dataBuffer.length > 12
+            dataLen = @dataBuffer.readUInt32BE 0
+            command = @dataBuffer.readUInt32BE 4
+            messageId = @dataBuffer.readUInt32BE 8
+            if dataLen <= @dataBuffer.length
+                data = @dataBuffer.toString "utf-8", 12, dataLen
+                @dataBuffer = @dataBuffer.slice dataLen
+            Log.d "dataLen: #{dataLen}, command: #{command}, messageId: #{messageId}, data: #{data}"
+            try
+                jsonData = JSON.parse data
+                if command > 1
+                    switch command
+                        when RemoteServer.CMD_PROXY
+                            @proxy_send messageId, jsonData
+                        when RemoteServer.CMD_WS_PROXY
+                            @proxy_ws messageId, jsonData
+            catch error
+                Log.d "error: #{error}"
 
     proxy_send: (messageId, req) ->
         request = require "request"
