@@ -91,7 +91,7 @@ class RemoteServer extends events.EventEmitter
                 @socket.on "close", =>
                     Log.d "remote server is closed"
                     @running = false
-                    @status = false
+                    @status = "stoped"
             else
                 Log.d "connect remote server fail"
                 if not @address.ipv4
