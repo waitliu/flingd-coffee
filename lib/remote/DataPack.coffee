@@ -28,16 +28,31 @@ class DataPack
         dataBuf = Buffer.concat [dataLengthBuf, commandBuf, messageIdBuf, msgBuf]
         return dataBuf
 
+    @check: (rawData) ->
+        if rawData.length < 12
+            return false
+        dataLen = rawData.readUInt32BE 0
+        if dataLen <= rawData.length
+            return true
+        else
+            return false
+
     @decode: (rawData) ->
         result = {}
         dataLen = rawData.readUInt32BE 0
         command = rawData.readUInt32BE 4
         messageId = rawData.readUInt32BE 8
-        data = rawData.toString "utf-8", 12
-        data = JSON.parse data
+        data = rawData.toString "utf-8", 12, dataLen
+        rawData = rawData.slice dataLen
+        try
+            data = JSON.parse data
+        catch error
+            result.error = error
+            data = {}
         result.command = command
         result.messageId = messageId
         result.data = data
+        result.rawData = rawData
         return result
 
 module.exports.DataPack = DataPack

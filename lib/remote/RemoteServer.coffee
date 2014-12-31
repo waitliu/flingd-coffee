@@ -143,43 +143,25 @@ class RemoteServer extends events.EventEmitter
         @sendData RemoteServer.CMD_REPORT, -2, message
 
     onReceive: (data) ->
-        @dataBuffer = Buffer.concat([@dataBuffer,data])
-        if @dataBuffer.length > 12
-            dataLen = @dataBuffer.readUInt32BE 0
-            command = @dataBuffer.readUInt32BE 4
-            messageId = @dataBuffer.readUInt32BE 8
-            if dataLen <= @dataBuffer.length
-                data = @dataBuffer.toString "utf-8", 12, dataLen
-                @dataBuffer = @dataBuffer.slice dataLen
-                Log.d "dataLen: #{dataLen}, command: #{command}, messageId: #{messageId}, data: #{data}"
-                try
-                    jsonData = JSON.parse data
-                    if command > 1
-                        switch command
-                            when RemoteServer.CMD_PROXY
-                                @proxy_send messageId, jsonData
-                            when RemoteServer.CMD_WS_PROXY
-                                @proxy_ws messageId, jsonData
-                catch error
-                    Log.d "error: #{error}"
-        if @dataBuffer.length > 12
-            dataLen = @dataBuffer.readUInt32BE 0
-            command = @dataBuffer.readUInt32BE 4
-            messageId = @dataBuffer.readUInt32BE 8
-            if dataLen <= @dataBuffer.length
-                data = @dataBuffer.toString "utf-8", 12, dataLen
-                @dataBuffer = @dataBuffer.slice dataLen
-            Log.d "dataLen: #{dataLen}, command: #{command}, messageId: #{messageId}, data: #{data}"
-            try
-                jsonData = JSON.parse data
-                if command > 1
-                    switch command
-                        when RemoteServer.CMD_PROXY
-                            @proxy_send messageId, jsonData
-                        when RemoteServer.CMD_WS_PROXY
-                            @proxy_ws messageId, jsonData
-            catch error
-                Log.d "error: #{error}"
+        @dataBuffer = Buffer.concat([@dataBuffer,data])                
+        Log.d "remote: revceive"
+        while DataPack.check @dataBuffer       
+            result = DataPack.decode @dataBuffer
+
+            dataLen = result.dataLen
+            command = result.command
+            messageId = result.messageId
+            jsonData = result.data
+            @dataBuffer = result.rawData
+            if result.error
+                Log.d "remote command: #{command}, messageId: #{messageId}, data: #{JSON.stringify jsonData}, error: #{result.error}"
+            else
+                Log.d "remote command: #{command}, messageId: #{messageId}, data: #{JSON.stringify jsonData}"
+            switch command
+                when RemoteServer.CMD_PROXY
+                    @proxy_send messageId, jsonData
+                when RemoteServer.CMD_WS_PROXY
+                    @proxy_ws messageId, jsonData
 
     proxy_send: (messageId, req) ->
         request = require "request"
