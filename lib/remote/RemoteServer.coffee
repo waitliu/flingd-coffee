@@ -63,7 +63,8 @@ class RemoteServer extends events.EventEmitter
         @randomCode = options.randomCode
 
     _start: ->
-        if !@status 
+        if !@running 
+            @status = "starting"
             @address = @getAddress()
             if @address.ipv4
                 Log.d "Starting connect remote #{@serverName}:#{@serverPort} ..."
@@ -81,6 +82,8 @@ class RemoteServer extends events.EventEmitter
 
                 @socket.on "connect", =>
                     Log.d "remote server is connect"
+                    @status = "running"
+                    @running = true
                     @login()
                     @report()
                     @emit "ready"
@@ -89,10 +92,6 @@ class RemoteServer extends events.EventEmitter
                     Log.d "remote server is closed"
                     @running = false
                     @status = false
-
-                @status = true
-                @running = true
-
             else
                 Log.d "connect remote server fail"
                 if not @address.ipv4
@@ -104,15 +103,16 @@ class RemoteServer extends events.EventEmitter
             @_start() ), 60000
 
         @pingLoop = setInterval (=>
-            @ping() ), 5000
+            @ping() ), 30000
 
     stop: ->
-        if status
-            @socket.close()
-            @status = false
+        if @status == "running"
             clearInterval @startLoop
             clearInterval @pingLoop
-            Log.d "disconnect remote server"
+            @socket.close()
+            @socket = null
+            @status = "stoped"
+        Log.d "disconnect remote server"
 
     sendData: (command, messageId, data) ->
         try
