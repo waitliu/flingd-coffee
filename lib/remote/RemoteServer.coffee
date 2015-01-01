@@ -75,7 +75,8 @@ class RemoteServer extends events.EventEmitter
                     Log.e error
 
                 @socket.on "error", (error) =>
-                    Log.e error
+                    @status = "stoped"
+                    Log.e "remote server error:#{error}"
 
                 @socket.on "data", (data) =>
                     @onReceive data
@@ -107,10 +108,7 @@ class RemoteServer extends events.EventEmitter
 
     stop: ->
         if @status == "running"
-            clearInterval @startLoop
-            clearInterval @pingLoop
             @socket.close()
-            @socket = null
             @status = "stoped"
         Log.d "disconnect remote server"
 
@@ -130,7 +128,7 @@ class RemoteServer extends events.EventEmitter
         @sendData RemoteServer.CMD_LOGIN, -1, message
 
     ping: ->
-        if @status
+        if @running
             message = 
                 "id":@deviceId
             @sendData RemoteServer.CMD_PING, -3, message

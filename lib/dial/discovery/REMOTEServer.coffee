@@ -51,7 +51,7 @@ class REMOTEServer
 
     stopServer: ->
         Log.d "stop RemoteDiscover ..."
-        if @advertisement && @advertisement.status
+        if @advertisement
             Log.d "real stop RemoteDiscover ..."
             @advertisement.stop()
 
