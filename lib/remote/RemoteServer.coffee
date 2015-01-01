@@ -24,10 +24,10 @@ os                  = require "os"
 class RemoteServer extends events.EventEmitter
     @CMD_LOGIN = 1
     @CMD_PING = 2
+    @CMD_PONG = 1004
     @CMD_REPORT = 1001
     @CMD_PROXY = 1002
     @CMD_WS_PROXY = 1003
-    @CMD_PING = 2
 
     constructor: ->
         events.EventEmitter.call(this)
@@ -129,9 +129,13 @@ class RemoteServer extends events.EventEmitter
 
     ping: ->
         if @running
-            message = 
-                "id":@deviceId
+            message = "" 
             @sendData RemoteServer.CMD_PING, -3, message
+
+    pong: (messageId)->
+        if @running
+            message = "" 
+            @sendData RemoteServer.CMD_PONG, messageId, message
 
     report: ->
         message = 
@@ -156,6 +160,8 @@ class RemoteServer extends events.EventEmitter
             else
                 Log.d "remote command: #{command}, messageId: #{messageId}, data: #{JSON.stringify jsonData}"
             switch command
+                when RemoteServer.CMD_PONG
+                    @pong messageId
                 when RemoteServer.CMD_PROXY
                     @proxy_send messageId, jsonData
                 when RemoteServer.CMD_WS_PROXY
